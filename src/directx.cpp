@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include "backends/imgui_impl_win32.h"
 #include "backends/imgui_impl_dx11.h"
+#include <scene.h>
 
 HRESULT DirectXDevice::InitDirect3D(HWND hWnd, int width, int height) {
     HRESULT hr = S_OK;
@@ -78,23 +79,68 @@ HRESULT DirectXDevice::InitDirect3D(HWND hWnd, int width, int height) {
     g_pImmediateContext->RSSetViewports(1, &vp);
 
     // ==========================================
-    // 7. Dear ImGui の初期化
+    // Dear ImGui の初期化 (高DPI対応版)
     // ==========================================
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // キーボード操作の有効化
+
+    // キーボード操作の有効化
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
     // スタイル設定（ダークテーマ）
     ImGui::StyleColorsDark();
 
+    // デフォルトフォントのスケール調整（必要に応じて、またはDpiEnableScaleFontsに任せる）
+    ImGui::GetStyle().ScaleAllSizes(1.0f); // 必要に応じて倍率調整
+
     // バックエンドの初期化
     ImGui_ImplWin32_Init(hWnd);
     ImGui_ImplDX11_Init(g_pd3dDevice, g_pImmediateContext);
+    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
+    RECT clientRect;
+    GetClientRect(hWnd, &clientRect); // hWnd のクライアント領域を取得
+
+    int r_width = clientRect.right - clientRect.left;   // 幅
+    int r_height = clientRect.bottom - clientRect.top; // 高さ
+
+    // Resize関数へ渡す
+    Resize(r_width, r_height);
 
     return S_OK;
 }
+void DirectXDevice::Resize(int width, int height) {
+    if (width <= 0 || height <= 0) return;
 
+    // 1. 既存のレンダーターゲットビューを解放
+    if (g_pRenderTargetView) {
+        g_pRenderTargetView->Release();
+        g_pRenderTargetView = nullptr;
+    }
+
+    // 2. スワップチェインのバッファサイズを変更
+    g_pSwapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
+
+    // 3. バックバッファの取得とRTVの再作成
+    ID3D11Texture2D* pBackBuffer = nullptr;
+    g_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBuffer);
+    g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_pRenderTargetView);
+    pBackBuffer->Release();
+
+    // 4. レンダーターゲットの設定
+    g_pImmediateContext->OMSetRenderTargets(1, &g_pRenderTargetView, nullptr);
+
+    // 5. ビューポート（Viewport）の再設定
+    D3D11_VIEWPORT vp;
+    vp.TopLeftX = 0.0f;
+    vp.TopLeftY = 0.0f;
+    vp.Width = (FLOAT)width;
+    vp.Height = (FLOAT)height;
+    vp.MinDepth = 0.0f;
+    vp.MaxDepth = 1.0f;
+    g_pImmediateContext->RSSetViewports(1, &vp);
+}
 void DirectXDevice::CleanupDirect3D() {
     // ==========================================
     // Dear ImGui の終了処理
@@ -102,7 +148,6 @@ void DirectXDevice::CleanupDirect3D() {
     ImGui_ImplDX11_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
-
     // DirectX リソースの解放
     if (g_pRenderTargetView) {
         g_pRenderTargetView->Release();
@@ -123,42 +168,32 @@ void DirectXDevice::CleanupDirect3D() {
 }
 
 void DirectXDevice::Render() {
-    // ==========================================
     // 1. ImGui フレームの開始
-    // ==========================================
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
-    // ==========================================
-    // 2. UI コンポーネントの記述（例）
-    // ==========================================
+    // 2. UI コンポーネントの記述
     ImGui::Begin("VideoEditor Control Panel");
     ImGui::Text("Hello from DirectX 11 & ImGui!");
-    if (ImGui::Button("Click Me")) {
-        // ボタンが押されたときの処理
-    }
     ImGui::End();
 
-    // ==========================================
-    // 3. 描画データの生成（ImGuiのRender）
-    // ==========================================
-    ImGui::Render();
-
-    // ==========================================
-    // 4. 画面を青色でクリアして描画ターゲット設定
-    // ==========================================
+    // 3. 画面を青色でクリアして描画ターゲット設定
     float clearColor[4] = { 0.0f, 0.0f, 1.0f, 1.0f }; // 青
     g_pImmediateContext->ClearRenderTargetView(g_pRenderTargetView, clearColor);
     g_pImmediateContext->OMSetRenderTargets(1, &g_pRenderTargetView, NULL);
 
     // ==========================================
-    // 5. ImGui の描画コマンドを実行
+    // 4. シーン内の全ゲームオブジェクトの描画を実行
     // ==========================================
-    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+    Scene::GetInstance().Render();
 
     // ==========================================
-    // 6. 画面に反映 (Present)
+    // 5. ImGui の描画データを DirectX 11 に渡して描画
     // ==========================================
+    ImGui::Render();
+    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+    // 6. 画面に反映 (Present)
     g_pSwapChain->Present(1, 0);
 }

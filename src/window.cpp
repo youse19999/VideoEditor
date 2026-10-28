@@ -70,22 +70,11 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
         return true;
-    // コールバックに渡されるHWndは有効なはず
-    assert(hwnd == nullptr || IsWindow(hwnd));
 
     switch (uMsg) {
-    case WM_CLOSE:
-        // DestroyUsage: // （そのまま閉じる）
-        if (hwnd) {
-            DestroyWindow(hwnd);
-        }
-        return 0;
-
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
     }
-    if (hwnd) {
-        return DefWindowProcW(hwnd, uMsg, wParam, lParam);
-    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }

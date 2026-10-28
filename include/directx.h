@@ -20,6 +20,8 @@ public:
 
     HRESULT InitDirect3D(HWND hWnd, int width, int height);
 
+    void Resize(int width, int height);
+
     // クリーンアップ関数
     void CleanupDirect3D();
     void Render();
