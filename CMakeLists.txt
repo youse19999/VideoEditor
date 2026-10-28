@@ -1,5 +1,7 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
+enable_testing()
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -19,6 +21,10 @@ project ("VideoEditor")
 
 add_executable (VideoEditor 
 				"src/entry.cpp")
+#testの設定
+add_executable(my_test test/test_main.cpp)
+
+add_test(NAME BasicTest COMMAND my_test)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET VideoEditor PROPERTY CXX_STANDARD 20)
