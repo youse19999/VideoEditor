@@ -19,15 +19,20 @@ endif()
 
 project ("VideoEditor")
 
-add_executable (VideoEditor 
-				"src/entry.cpp"
+add_library (VideoEditorLib 
                 "src/window.cpp")
 
+add_executable (VideoEditor 
+				"src/entry.cpp")
+
+target_include_directories(VideoEditorLib PRIVATE include)
 target_include_directories(VideoEditor PRIVATE include)
+
+target_link_libraries(VideoEditor PRIVATE VideoEditorLib)
 #testの設定
 add_executable(my_test test/test_main.cpp)
 
-target_link_libraries(my_test include)
+target_link_libraries(my_test VideoEditorLib)
 
 add_test(NAME BasicTest COMMAND my_test)
 
