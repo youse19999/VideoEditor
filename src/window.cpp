@@ -1,7 +1,12 @@
 ﻿#include "Window.h"
+#include <cassert> // assertを使うために追加
 
 Window::Window(int width, int height, const std::wstring& title) : hwnd_(nullptr) {
+    // 幅と高さは正の値であるべき
+    assert(width > 0 && height > 0);
+
     HINSTANCE hInstance = GetModuleHandle(nullptr);
+    assert(hInstance != nullptr);
 
     WNDCLASSW wc = {};
     wc.lpfnWndProc = WindowProc;
@@ -10,7 +15,10 @@ Window::Window(int width, int height, const std::wstring& title) : hwnd_(nullptr
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 
-    RegisterClassW(&wc);
+    // 登録失敗チェック（すでに登録されている場合などはATOMが0を返すことがあるが、
+    // 同名クラスの二重登録などをデバッグ時に検知するため）
+    ATOM atom = RegisterClassW(&wc);
+    assert(atom != 0 || GetLastError() == ERROR_CLASS_ALREADY_EXISTS);
 
     // lpParam には何も渡さない（nullptr）
     hwnd_ = CreateWindowExW(
@@ -22,19 +30,21 @@ Window::Window(int width, int height, const std::wstring& title) : hwnd_(nullptr
         width, height,
         nullptr, nullptr, hInstance, nullptr
     );
+
+    // ウィンドウの作成に失敗していないことをアサート
+    assert(hwnd_ != nullptr && "Failed to create window via CreateWindowExW");
 }
 
 Window::~Window() {
-    if (hwnd_) {
-        DestroyWindow(hwnd_);
-    }
+    hwnd_ = nullptr;
 }
 
 void Window::Show(int nCmdShow) {
-    if (hwnd_) {
-        ShowWindow(hwnd_, nCmdShow);
-        UpdateWindow(hwnd_);
-    }
+    // ウィンドウハンドルが有効な状態でのみ呼ぶべき
+    assert(hwnd_ != nullptr);
+
+    ShowWindow(hwnd_, nCmdShow);
+    UpdateWindow(hwnd_);
 }
 
 bool Window::ProcessMessages() {
@@ -55,15 +65,22 @@ HWND Window::GetHandle() const {
 
 // thisを使わない、ただのシンプルなメッセージ処理関数
 LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    // コールバックに渡されるHWndは有効なはず
+    assert(hwnd == nullptr || IsWindow(hwnd));
+
     switch (uMsg) {
     case WM_CLOSE:
-    DestroyUsage: // （そのまま閉じる）
-        DestroyWindow(hwnd);
+        // DestroyUsage: // （そのまま閉じる）
+        if (hwnd) {
+            DestroyWindow(hwnd);
+        }
         return 0;
 
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
     }
-    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+    if (hwnd) {
+        return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+    }
 }
