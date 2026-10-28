@@ -1,4 +1,4 @@
-#include "Window.h"
+ï»¿#include "Window.h"
 
 Window::Window(int width, int height, const std::wstring& title) : hwnd_(nullptr) {
     HINSTANCE hInstance = GetModuleHandle(nullptr);
@@ -12,7 +12,7 @@ Window::Window(int width, int height, const std::wstring& title) : hwnd_(nullptr
 
     RegisterClassW(&wc);
 
-    // lpParam ‚É‚Í‰½‚à“n‚³‚È‚¢inullptrj
+    // lpParam ã«ã¯ä½•ã‚‚æ¸¡ã•ãªã„ï¼ˆnullptrï¼‰
     hwnd_ = CreateWindowExW(
         0,
         L"SimpleWindowClassName",
@@ -53,11 +53,11 @@ HWND Window::GetHandle() const {
     return hwnd_;
 }
 
-// this‚ğg‚í‚È‚¢A‚½‚¾‚ÌƒVƒ“ƒvƒ‹‚ÈƒƒbƒZ[ƒWˆ—ŠÖ”
+// thisã‚’ä½¿ã‚ãªã„ã€ãŸã ã®ã‚·ãƒ³ãƒ—ãƒ«ãªãƒ¡ãƒƒã‚»ãƒ¼ã‚¸å‡¦ç†é–¢æ•°
 LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
     case WM_CLOSE:
-    DestroyUsage: // i‚»‚Ì‚Ü‚Ü•Â‚¶‚éj
+    DestroyUsage: // ï¼ˆãã®ã¾ã¾é–‰ã˜ã‚‹ï¼‰
         DestroyWindow(hwnd);
         return 0;
 

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <windows.h>
 #include <string>
@@ -15,6 +15,6 @@ public:
 private:
     HWND hwnd_;
 
-    // Ã“IƒvƒƒV[ƒWƒƒ‚¾‚ªAthis‚ğg‚í‚¸ƒVƒ“ƒvƒ‹‚É‹Lq
+    // é™çš„ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£ã ãŒã€thisã‚’ä½¿ã‚ãšã‚·ãƒ³ãƒ—ãƒ«ã«è¨˜è¿°
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
