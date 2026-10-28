@@ -29,4 +29,4 @@ jobs:
     - name: Test
       # CTest を使用してテストを実行する場合
       working-directory: build
-      run: ctest
+      run: ctest --output-on-failure
