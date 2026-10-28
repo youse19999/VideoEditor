@@ -1,4 +1,4 @@
-name: CMake Windows MSVC Build
+ï»¿name: CMake Windows MSVC Build
 
 on:
   push:
@@ -13,20 +13,20 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # 1. CMake ‚Æ Ninja ‚ÌƒZƒbƒgƒAƒbƒv (•K—v‚É‰‚¶‚Ä•ÏX‰Â”\)
+    # 1. CMake ã¨ Ninja ã®ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ— (å¿…è¦ã«å¿œã˜ã¦å¤‰æ›´å¯èƒ½)
     - name: Setup CMake
       uses: lukka/get-cmake@latest
 
-    # 2. MSVCŠÂ‹«‚Å‚Ìƒrƒ‹ƒhİ’è‚ÆÀs
+    # 2. MSVCç’°å¢ƒã§ã®ãƒ“ãƒ«ãƒ‰è¨­å®šã¨å®Ÿè¡Œ
     - name: Configure CMake
-      # Visual Studio ‚ÌƒfƒtƒHƒ‹ƒgƒWƒFƒlƒŒ[ƒ^‚ğg—p‚·‚éê‡
+      # Visual Studio ã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‚¸ã‚§ãƒãƒ¬ãƒ¼ã‚¿ã‚’ä½¿ç”¨ã™ã‚‹å ´åˆ
       run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
     - name: Build
-      # --config ‚Åƒrƒ‹ƒh\¬‚ğw’è (Release, Debug ‚È‚Ç)
+      # --config ã§ãƒ“ãƒ«ãƒ‰æ§‹æˆã‚’æŒ‡å®š (Release, Debug ãªã©)
       run: cmake --build build --config Release
 
     - name: Test
-      # CTest ‚ğg—p‚µ‚ÄƒeƒXƒg‚ğÀs‚·‚éê‡
+      # CTest ã‚’ä½¿ç”¨ã—ã¦ãƒ†ã‚¹ãƒˆã‚’å®Ÿè¡Œã™ã‚‹å ´åˆ
       working-directory: build
       run: ctest --config Release --output-on-failure
