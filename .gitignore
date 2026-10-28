@@ -1,0 +1,8 @@
+#gitのフォルダー
+.git
+#visual studioのフォルダー
+.vs
+#出力フォルダー
+out
+#.githubを追加
+.github
