@@ -20,7 +20,8 @@ endif()
 project ("VideoEditor")
 
 add_library (VideoEditorLib 
-                "src/window.cpp")
+                "src/window.cpp"
+                "src/directx.cpp")
 
 add_executable (VideoEditor 
 				"src/entry.cpp")
