@@ -1,0 +1,32 @@
+name: CMake Windows MSVC Build
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # 1. CMake と Ninja のセットアップ (必要に応じて変更可能)
+    - name: Setup CMake
+      uses: lukka/get-cmake@latest
+
+    # 2. MSVC環境でのビルド設定と実行
+    - name: Configure CMake
+      # Visual Studio のデフォルトジェネレータを使用する場合
+      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      # --config でビルド構成を指定 (Release, Debug など)
+      run: cmake --build build --config Release
+
+    - name: Test
+      # CTest を使用してテストを実行する場合
+      working-directory: build
+      run: ctest --config Release --output-on-failure
