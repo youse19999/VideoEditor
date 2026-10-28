@@ -1,5 +1,6 @@
 ﻿#include "Window.h"
 #include <cassert> // assertを使うために追加
+#include <imgui.h>
 
 Window::Window(int width, int height, const std::wstring& title) : hwnd_(nullptr) {
     // 幅と高さは正の値であるべき
@@ -62,9 +63,13 @@ bool Window::ProcessMessages() {
 HWND Window::GetHandle() const {
     return hwnd_;
 }
+// ImGui のWin32メッセージハンドラを宣言
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // thisを使わない、ただのシンプルなメッセージ処理関数
 LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
+        return true;
     // コールバックに渡されるHWndは有効なはず
     assert(hwnd == nullptr || IsWindow(hwnd));
 

@@ -1,4 +1,7 @@
-﻿#include <directx.h>
+﻿#include "directx.h"
+#include "imgui.h"
+#include "backends/imgui_impl_win32.h"
+#include "backends/imgui_impl_dx11.h"
 
 HRESULT DirectXDevice::InitDirect3D(HWND hWnd, int width, int height) {
     HRESULT hr = S_OK;
@@ -74,9 +77,33 @@ HRESULT DirectXDevice::InitDirect3D(HWND hWnd, int width, int height) {
     vp.MaxDepth = 1.0f;
     g_pImmediateContext->RSSetViewports(1, &vp);
 
+    // ==========================================
+    // 7. Dear ImGui の初期化
+    // ==========================================
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // キーボード操作の有効化
+
+    // スタイル設定（ダークテーマ）
+    ImGui::StyleColorsDark();
+
+    // バックエンドの初期化
+    ImGui_ImplWin32_Init(hWnd);
+    ImGui_ImplDX11_Init(g_pd3dDevice, g_pImmediateContext);
+
     return S_OK;
 }
+
 void DirectXDevice::CleanupDirect3D() {
+    // ==========================================
+    // Dear ImGui の終了処理
+    // ==========================================
+    ImGui_ImplDX11_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
+
+    // DirectX リソースの解放
     if (g_pRenderTargetView) {
         g_pRenderTargetView->Release();
         g_pRenderTargetView = nullptr;
@@ -94,13 +121,44 @@ void DirectXDevice::CleanupDirect3D() {
         g_pd3dDevice = nullptr;
     }
 }
-void DirectXDevice::Render() {
-    // 1. 画面（レンダーターゲットビュー）をクリアする色を指定（ここでは青色：R=0, G=0, B=1, A=1）
-    float clearColor[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
-    g_pImmediateContext->ClearRenderTargetView(g_pRenderTargetView, clearColor);
 
-    // 2. スワップチェインのバックバッファをフロントに表示する（Present）
-    // 第1引数: 0 = VSync（垂直同期）あり, 1以上 = VSyncなし（最大速度）
-    // 第2引数: 0 = デフォルトのフラグ
+void DirectXDevice::Render() {
+    // ==========================================
+    // 1. ImGui フレームの開始
+    // ==========================================
+    ImGui_ImplDX11_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
+    // ==========================================
+    // 2. UI コンポーネントの記述（例）
+    // ==========================================
+    ImGui::Begin("VideoEditor Control Panel");
+    ImGui::Text("Hello from DirectX 11 & ImGui!");
+    if (ImGui::Button("Click Me")) {
+        // ボタンが押されたときの処理
+    }
+    ImGui::End();
+
+    // ==========================================
+    // 3. 描画データの生成（ImGuiのRender）
+    // ==========================================
+    ImGui::Render();
+
+    // ==========================================
+    // 4. 画面を青色でクリアして描画ターゲット設定
+    // ==========================================
+    float clearColor[4] = { 0.0f, 0.0f, 1.0f, 1.0f }; // 青
+    g_pImmediateContext->ClearRenderTargetView(g_pRenderTargetView, clearColor);
+    g_pImmediateContext->OMSetRenderTargets(1, &g_pRenderTargetView, NULL);
+
+    // ==========================================
+    // 5. ImGui の描画コマンドを実行
+    // ==========================================
+    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+    // ==========================================
+    // 6. 画面に反映 (Present)
+    // ==========================================
     g_pSwapChain->Present(1, 0);
 }
